@@ -6,6 +6,10 @@ A walk-forward allocator that splits capital across a small book of strategies (
 
 I built this for a small book of market-neutral strategies, one of which carries gap risk. The return series are proprietary and not in this repo. Everything here runs on a **synthetic panel with the same shape** (a monthly-only stretch, then about three years of daily data), so you can clone the repo and reproduce every number below.
 
+## What problem this solves
+
+A fund runs a few strategies and has to decide how much capital each one gets. The mandate says the whole book must never lose more than a fixed share of capital in a single day. Monthly history is long but hides bad days, and daily history is short, so this repo uses both: monthly data for the averages, daily data to check the loss limit.
+
 ## At a glance
 
 | | |
@@ -18,17 +22,16 @@ I built this for a small book of market-neutral strategies, one of which carries
 
 ## How it works
 
-```
-monthly panel ─┐
-               ├─► at each month-end: select recipe (every 6m, trailing data only)
-daily panel  ──┘        │
-                        ▼
-               mu, Sigma from last L months ──► max w'mu - lam/2 w'Sigma w
-               last 252 daily rows as scenarios    s.t. w'r_t >= -limit, caps
-                        │
-                        ▼
-               hold w for the next month ──► vol-quantile scaler (t-1) ──► net of costs
-   data.py        walkforward.py              optimizer.py                 overlays.py
+```mermaid
+flowchart TD
+    M[monthly panel<br/>data.py] --> R
+    D[daily panel<br/>data.py] --> R
+    R[month-end M-1: re-select recipe every 6 months<br/>trailing data only, walkforward.py] --> E
+    E[mu and Sigma from last L months<br/>last 252 daily rows as loss scenarios] --> O
+    O[max w'mu - lam/2 w'Sigma w<br/>s.t. w'r_t >= -limit, then caps<br/>optimizer.py] --> H
+    H[hold w through month M] --> V
+    V[vol-quantile scaler 0.7x-1.3x<br/>uses vol up to t-1, overlays.py] --> C
+    C[net of turnover costs<br/>compare with equal weight, metrics.py]
 ```
 
 1. **Estimate** each strategy's mean and covariance from the trailing `L` months of the monthly panel.
@@ -36,8 +39,37 @@ daily panel  ──┘        │
 3. **Cap** the gap-risk strategy and the largest strategy, then redistribute the excess pro rata.
 4. **Re-select** `limit`, risk aversion `lam`, the two caps and `L` every 6 months. Each candidate runs as an inner walk-forward on data available at that date only, and the one with the best inner Sharpe wins.
 5. **Scale** daily exposure between 0.7x and 1.3x by where yesterday's trailing 20-day book vol ranks in its own history.
+6. **Charge costs** on turnover, and compare with an equal-weight book on the same days.
+
+A step-by-step code walkthrough with real intermediate output is in [docs/walkthrough.md](docs/walkthrough.md).
+
+## Key concepts
+
+- **Strategy book**: a set of trading strategies, each with its own return stream. Here the allocator picks weights across them, not across assets.
+- **Mean-variance optimisation**: choose weights that maximise expected return minus `lam/2` times variance. `lam` is the risk aversion.
+- **Historical-scenario constraint**: the book, with today's weights, must not have lost more than `limit` on any of the last 252 days. It needs no distribution assumption.
+- **Per-strategy cap**: a maximum weight on one strategy, with the excess spread over the others.
+- **Hyper-parameter (recipe)**: the settings `limit`, `lam`, the two caps and the lookback `L`.
+- **Trailing reselection**: pick the recipe again every 6 months using only data that existed at that date.
+- **Walk-forward**: decide at the end of month M-1, hold through month M, move one month on.
+- **Point-in-time**: nothing used for a decision is dated after the decision. A test corrupts future data and checks that past results do not change.
+- **Vol-quantile overlay**: scale the whole book down when its recent volatility is high relative to its own past, and up when it is low.
+- **Turnover cost**: a charge in basis points for each unit of weight that changes.
+- **Equal weight**: 1/N in every strategy. A simple baseline that is hard to beat when means are noisy.
+- **Sharpe ratio**: annualised mean return divided by annualised volatility. **Max drawdown**: the worst fall from a previous peak.
+
+## What you will learn
+
+- How to combine a long monthly history with a short daily history in one allocator.
+- How to write a daily loss limit as a linear constraint and solve it with SciPy.
+- How to choose hyper-parameters honestly, with a nested walk-forward on trailing data.
+- How to write tests that prove a backtest is point-in-time.
+- Why an honest result can be "this does not beat equal weight", and how to report it.
+- Why more ML did not help on a small sample (see the list of negative results).
 
 ## Results on synthetic data
+
+All numbers in this section come from the **synthetic** panel. They show how the method behaves, not what it earns on real money.
 
 `python scripts/run_backtest.py` (seed 7, 741 scored days, 2 bps per unit of turnover):
 
@@ -90,9 +122,10 @@ Later, non-forecasting ideas also failed. Hierarchical risk parity was clearly w
 
 ```
 src/ddalloc/   data.py · optimizer.py · overlays.py · walkforward.py · metrics.py
-scripts/       run_backtest.py · make_synthetic_data.py
+scripts/       run_backtest.py · make_synthetic_data.py (writes data/monthly.csv, data/daily.csv)
 tests/         caps, loss limit, infeasibility, overlay causality, month-M leakage, point-in-time run, noise
-docs/          methodology.md
+docs/          README.md (index) · methodology.md · walkthrough.md
+original/      the original research code, sanitised (read-only)
 ```
 
 ## Quick start
@@ -102,10 +135,11 @@ pip install -r requirements.txt
 python -m pytest -q
 python scripts/run_backtest.py                       # synthetic
 python scripts/run_backtest.py --noise               # no-signal check
-python scripts/run_backtest.py --monthly m.csv --daily d.csv --cost-bps 5 --rf 0.05
+python scripts/make_synthetic_data.py                # writes data/monthly.csv and data/daily.csv
+python scripts/run_backtest.py --monthly data/monthly.csv --daily data/daily.csv --cost-bps 5 --rf 0.05
 ```
 
-Both CSVs need a date column first, then one column per strategy holding simple returns. The column order matters: by default, index 1 is the gap-risk strategy that gets the gap cap, and index 0 gets the second cap (see `Config`).
+The last command shows how to run your own data. Both CSVs need a date column first, then one column per strategy holding simple returns. The column order matters: by default, index 1 is the gap-risk strategy that gets the gap cap, and index 0 gets the second cap (see `Config`).
 
 ## Original research code
 
