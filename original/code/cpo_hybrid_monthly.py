@@ -5,7 +5,7 @@ drawdown constraint stays enforced using real daily data -- since
 monthly returns average away single-day risk entirely and can't verify
 that constraint, only daily data can.
 
-Per Client's data-availability confirmation (16/07/2026): daily data
+Per the data-availability confirmation (16/07/2026): daily data
 doesn't exist before Apr 2023 for Strategy A, Strategy C
 Intraday, or Strategy D. Monthly data goes back further, but the common
 window across all 4 strategies is capped by StrategyB (Jan 2021 -- no
@@ -63,7 +63,7 @@ def load_simple(xlsx, sheet, skiprows=0, cols=None):
     return month_end(df["date"], df["ret"])
 
 
-def build_extended_monthly_panel(xlsx="raw_data/Client_ReturnSeries.xlsx"):
+def build_extended_monthly_panel(xlsx="raw_data/Strategy_ReturnSeries.xlsx"):
     """Real monthly data pre-Apr2023 (per strategy's own earliest
     reliable monthly source), spliced with the real daily data
     aggregated to monthly from Apr2023 onward -- NOT the same series
@@ -72,7 +72,7 @@ def build_extended_monthly_panel(xlsx="raw_data/Client_ReturnSeries.xlsx"):
     strategy_b_daily = load_simple(xlsx, "StrategyB Strategy_Daily INR")
     strategy_b_monthly_full = (1 + strategy_b_daily).resample("ME").prod() - 1
     strategy_c_monthly_early = load_simple(xlsx, "Strategy C_Monthly INR")
-    strategy_d_monthly_early = load_simple(xlsx, "Strategy D_Monthly INR")  # confirmed correct by Client, not Long History
+    strategy_d_monthly_early = load_simple(xlsx, "Strategy D_Monthly INR")  # confirmed correct by the data owner, not Long History
 
     daily_panel = load_daily_panel()
     daily_to_monthly = (1 + daily_panel).resample("ME").prod() - 1
@@ -94,7 +94,7 @@ def build_extended_monthly_panel(xlsx="raw_data/Client_ReturnSeries.xlsx"):
     # Known source-data issue: both "Strategy C_Monthly INR" and
     # "Strategy D_Monthly INR" have a duplicated 2021-06-01 date entry
     # where an 2021-08-01 entry should be (same row, same error, in
-    # both tabs) -- flagged for Client, dropped here rather than guessed.
+    # both tabs) -- flagged for review, dropped here rather than guessed.
     panel = panel.dropna()
     return panel, daily_panel
 

@@ -1,6 +1,6 @@
 """
 CPO v2: daily-frequency allocator with a HARD 2% max-daily-loss
-constraint, per client direction (14/07/2026): "focus on daily" for
+constraint, per the review direction (14/07/2026): "focus on daily" for
 Strategy A (use Fund Class D, not the monthly Class A series) and
 "whatever we do should limit to 2% max daily dd" (hard constraint, not
 the soft variance-penalty proxy used in v1).
@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
-XLSX = "raw_data/Client_ReturnSeries.xlsx"
+XLSX = "raw_data/Strategy_ReturnSeries.xlsx"
 RF_ANNUAL = 0.07
 DD_LIMIT = 0.02
 LOOKBACK_DAYS = 252  # ~1y trailing window for both mu estimation and the hard constraint

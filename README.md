@@ -125,7 +125,7 @@ src/ddalloc/   data.py · optimizer.py · overlays.py · walkforward.py · metri
 scripts/       run_backtest.py · make_synthetic_data.py (writes data/monthly.csv, data/daily.csv)
 tests/         caps, loss limit, infeasibility, overlay causality, month-M leakage, point-in-time run, noise
 docs/          README.md (index) · methodology.md · walkthrough.md
-original/      the original research code, sanitised (read-only)
+original/      the original research code (read-only)
 ```
 
 ## Quick start
@@ -143,11 +143,9 @@ The last command shows how to run your own data. Both CSVs need a date column fi
 
 ## Original research code
 
-[`original/`](original/README.md) holds the code as I first wrote it for this work, sanitised and nothing else:
-client, company and person names replaced, credentials and local paths removed, data files and notebook outputs
-dropped, and internal deployment notes, client-facing decks and client findings memos left out. It is kept so
-the real work can be read alongside the maintained version. Some of it contains the issues
-described above; comparing the two shows each fix.
+[`original/`](original/README.md) holds the code as I first wrote it for this project. It is kept so you can
+read the first version alongside the maintained one; some of it contains the issues in the audit table above,
+and comparing the two shows each fix.
 
 ## License
 

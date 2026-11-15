@@ -55,4 +55,4 @@ The data problem is that daily history is short (about three years for most stra
 
 ## Dropped from this repo
 
-I dropped the per-strategy ML exploratory scripts, the CPCV harnesses, the copula, Michaud, EWMA, HRP and trend experiments, the external-data pulls, a separate per-strategy ML improvement workstream (no edge on monthly-only data), client-facing documents and all real data. Their conclusions are summarised above.
+I dropped the per-strategy ML exploratory scripts, the CPCV harnesses, the copula, Michaud, EWMA, HRP and trend experiments, the external-data pulls, a separate per-strategy ML improvement workstream (no edge on monthly-only data), presentation documents and all real data. Their conclusions are summarised above.

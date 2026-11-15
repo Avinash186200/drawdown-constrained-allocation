@@ -16,7 +16,7 @@ reported as a robustness check immune to any fitting bias, alongside
 the honestly-reselected blend ratio.
 
 Bayesian formula is the exact precision-weighted update from the
-Client project's own bayesian.py: prior = long-run trailing mean/var,
+The earlier project's own bayesian.py: prior = long-run trailing mean/var,
 view = short-run trailing mean/var, posterior precision = sum of
 precisions, posterior mean = precision-weighted average.
 """
@@ -35,7 +35,7 @@ BLEND_RATIO_CANDIDATES = [0.0, 0.25, 0.5, 0.75, 1.0]  # 0 = pure MV, 1 = pure Ba
 
 
 def bayesian_mu(trailing_m, bayes_window):
-    """Precision-weighted posterior mean, per strategy, per Client's
+    """Precision-weighted posterior mean, per strategy, per the
     bayesian.py: prior = full trailing_m history, view = last
     bayes_window months of it. Both in monthly-return units already,
     no rescaling needed since neither side comes from a prob-space
