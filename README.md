@@ -1,10 +1,10 @@
 # Drawdown-Constrained Allocation
 
+[![CI](https://github.com/Avinash186200/drawdown-constrained-allocation/actions/workflows/ci.yml/badge.svg)](https://github.com/Avinash186200/drawdown-constrained-allocation/actions/workflows/ci.yml) ![Python](https://img.shields.io/badge/python-3.11-blue) [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 A walk-forward allocator that splits capital across a small book of strategies (four, in my case) under a **hard cap on single-day book loss**. Means and covariances come from monthly history, which goes back further. The daily loss limit is enforced on real daily returns, because monthly data averages single-day risk away and cannot check it.
 
 I built this for a small book of market-neutral strategies, one of which carries gap risk. The return series are proprietary and not in this repo. Everything here runs on a **synthetic panel with the same shape** (a monthly-only stretch, then about three years of daily data), so you can clone the repo and reproduce every number below.
-
-[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
 ## At a glance
 
@@ -107,6 +107,16 @@ python scripts/run_backtest.py --monthly m.csv --daily d.csv --cost-bps 5 --rf 0
 
 Both CSVs need a date column first, then one column per strategy holding simple returns. The column order matters: by default, index 1 is the gap-risk strategy that gets the gap cap, and index 0 gets the second cap (see `Config`).
 
+## Original research code
+
+[`original/`](original/README.md) holds the code as I first wrote it for this work, sanitised and nothing else:
+client, company and person names replaced, credentials and local paths removed, data files and notebook outputs
+dropped, and internal deployment notes, client-facing decks and client findings memos left out. It is kept so
+the real work can be read alongside the maintained version. Some of it contains the issues
+described above; comparing the two shows each fix.
+
 ## License
 
 MIT
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the [CHANGELOG](CHANGELOG.md).
